@@ -102,7 +102,10 @@ func (c *Cache) Get() Releases {
 	return c.releases
 }
 
-func (c *Cache) Refresh(ctx context.Context) {
+func (c *Cache) Refresh() {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
 	slog.Info("Refreshing cache...")
 
 	type result struct {
@@ -195,13 +198,12 @@ func main() {
 	}
 
 	cache := NewCache(cfg)
+	cache.Refresh()
 
 	go func() {
 		for {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-			cache.Refresh(ctx)
-			cancel()
 			time.Sleep(cfg.RefreshInterval)
+			cache.Refresh()
 		}
 	}()
 
