@@ -106,6 +106,7 @@ func (c *Cache) Refresh(ctx context.Context) {
 	slog.Info("Refreshing cache...")
 
 	type result struct {
+		name    string
 		release Release
 		err     error
 	}
@@ -116,27 +117,38 @@ func (c *Cache) Refresh(ctx context.Context) {
 		go func() {
 			release, err := c.fetchRelease(ctx, repoName)
 			if err != nil {
-				ch <- result{err: err}
+				ch <- result{
+					name: repoName,
+					err:  err,
+				}
 				return
 			}
 
-			ch <- result{release: release}
+			ch <- result{
+				name:    repoName,
+				release: release,
+			}
 		}()
 	}
 
-	var releases []Release
+	releasesMap := make(map[string]Release)
 	for range len(c.cfg.Repos) {
 		select {
 		case r := <-ch:
 			if r.err != nil {
-				slog.Error("Error fetching release:", r.err)
+				slog.Error(fmt.Sprintf("Error fetching release for: %v: %v", r.name, r.err))
 				continue
 			}
 
-			releases = append(releases, r.release)
+			releasesMap[r.name] = r.release
 		case <-ctx.Done():
 			slog.Warn("Cache refresh cancelled")
 		}
+	}
+
+	var releases []Release
+	for _, repoName := range c.cfg.Repos {
+		releases = append(releases, releasesMap[repoName])
 	}
 
 	c.lock.Lock()
