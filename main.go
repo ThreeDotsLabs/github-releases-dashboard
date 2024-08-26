@@ -103,9 +103,6 @@ func (c *Cache) Get() Releases {
 }
 
 func (c *Cache) Refresh(ctx context.Context) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	slog.Info("Refreshing cache...")
 
 	type result struct {
@@ -142,10 +139,12 @@ func (c *Cache) Refresh(ctx context.Context) {
 		}
 	}
 
+	c.lock.Lock()
 	c.releases = Releases{
 		Releases:  releases,
 		FetchedAt: time.Now(),
 	}
+	c.lock.Unlock()
 
 	slog.Info("Cache refreshed")
 }
