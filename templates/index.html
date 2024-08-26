@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Releases Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #0366d6;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            color: #fff;
+            background-color: #0366d6;
+            border-radius: 20px;
+        }
+        .tag svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
+            fill: currentColor;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Releases Dashboard</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Repository</th>
+                    <th>Latest Release Tag</th>
+                    <th>Released At</th>
+                    <th>Unreleased Commits</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Releases}}
+                <tr>
+                    <td><a href="https://github.com/{{.Repo.FullName}}" target="_blank">{{.Repo.Name}}</a></td>
+                    <td>
+                        <a href="https://github.com/{{.Repo.FullName}}/releases/tag/{{.LatestTag}}" target="_blank">
+                            <span class="tag">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                </svg>
+                                {{.LatestTag}}
+                            </span>
+                        </a>
+                    </td>
+                    <td>
+                        {{.LatestTagAgo}}
+                    </td>
+                    <td>
+                        {{if gt .UnreleasedCommits 0}}
+                            <a href="https://github.com/{{.Repo.FullName}}/compare/{{.LatestTag}}...{{.Repo.Branch}}" target="_blank">{{.UnreleasedCommits}}</a>
+                        {{else}}
+                            0
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+
+        <p class="footer">
+            <small>
+                Last update {{.FetchedAtAgo}}<br>
+                <a href="https://github.com/ThreeDotsLabs/github-releases-dashboard" target="_blank">GitHub Releases Dashboard</a> made with 🧪 by <a href="https://threedots.tech" target="_blank">Three Dots Labs</a>
+            </small>
+        </p>
+    </div>
+</body>
+</html>
