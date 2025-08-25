@@ -80,6 +80,7 @@
                     <th>Latest Release Tag</th>
                     <th>Released At</th>
                     <th>Unreleased Commits</th>
+                    <th>Open PRs</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,6 +103,13 @@
                     <td>
                         {{if gt .UnreleasedCommits 0}}
                             <a href="https://github.com/{{.Repo.FullName}}/compare/{{.LatestTag}}...{{.Repo.Branch}}" target="_blank">{{.UnreleasedCommits}}</a>
+                        {{else}}
+                            0
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if gt .OpenPRs 0}}
+                            <a href="https://github.com/{{.Repo.FullName}}/pulls" target="_blank">{{.OpenPRs}}</a>
                         {{else}}
                             0
                         {{end}}

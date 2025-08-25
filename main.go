@@ -41,6 +41,7 @@ type Release struct {
 	LatestTag         string
 	LatestTagAgo      string
 	UnreleasedCommits int
+	OpenPRs           int
 }
 
 type Repo struct {
@@ -180,6 +181,11 @@ func (c *Cache) fetchRelease(ctx context.Context, repoName string) (Release, err
 		return Release{}, fmt.Errorf("error comparing commits for %s: %w", repoName, err)
 	}
 
+	openPRs, err := countOpenPullRequests(ctx, c.client, repo.Owner, repo.Name)
+	if err != nil {
+		return Release{}, fmt.Errorf("error counting open pull requests for %s: %w", repoName, err)
+	}
+
 	publishedAt := latestRelease.GetPublishedAt()
 	latestTagAgo := humanize.Time(publishedAt.Time)
 
@@ -188,7 +194,36 @@ func (c *Cache) fetchRelease(ctx context.Context, repoName string) (Release, err
 		LatestTag:         *latestRelease.TagName,
 		LatestTagAgo:      latestTagAgo,
 		UnreleasedCommits: *comparison.TotalCommits,
+		OpenPRs:           openPRs,
 	}, nil
+}
+
+func countOpenPullRequests(ctx context.Context, client *github.Client, owner, repo string) (int, error) {
+	opt := &github.PullRequestListOptions{
+		State: "open",
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+
+	totalPRs := 0
+
+	for {
+		prs, resp, err := client.PullRequests.List(ctx, owner, repo, opt)
+		if err != nil {
+			return 0, fmt.Errorf("error listing pull requests for %s/%s: %w", owner, repo, err)
+		}
+
+		totalPRs += len(prs)
+
+		// Check if there are more pages
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.Page = resp.NextPage
+	}
+
+	return totalPRs, nil
 }
 
 func main() {
